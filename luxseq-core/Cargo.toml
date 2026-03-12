@@ -1,0 +1,21 @@
+[package]
+name = "luxseq-core"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+# Niskopoziomowy dostęp do I/O dla portu szeregowego
+x86_64 = "0.15.4"
+
+[profile.dev]
+debug = true
+opt-level = 0
+
+[profile.release]
+
+opt-level = 3
+lto = "thin"
+codegen-units = 1
+panic = "abort"
+strip = true
+debug = false
