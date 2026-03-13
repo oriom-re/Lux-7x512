@@ -48,7 +48,7 @@ impl LuxPointer {
         }
     }
 }
-
+// 
 #[repr(C, packed)]
 pub struct LuxSymbol {
     pub header: u8,
@@ -58,6 +58,65 @@ pub struct LuxSymbol {
 impl LuxSymbol {
     pub fn execute(&self, current_rip: u64) -> u64 {
         self.body.resolve(current_rip)
+    }
+}
+
+struct  LuxPromise {
+    status: u8,
+    disk_lba: u64,
+    ocean_target: u64,
+    size_sectors: u64,
+}
+impl LuxPromise {
+    // Sprawdza, czy obietnica została już spełniona (Present Bit w statusie)
+    pub fn is_present(&self) -> bool {
+        (self.status & 0b00000001) != 0
+    }
+
+    // "Materializacja": Wczytuje dane z LBA do Oceanu (Target)
+    pub fn materialize(&mut self) {
+        if !self.is_present() {
+            // Tu wywołujemy Twój sterownik dysku (np. ATA/PCIe)
+            // disk_read(self.disk_lba, self.ocean_target, self.size_sectors);
+            
+            // Po wczytaniu ustawiamy flagę PRESENT
+            self.status |= 0b00000001;
+            
+            // LOG-LUX: "Obietnica LBA X spełniona pod adresem Y"
+        }
+    }
+}
+
+#[repr(C, packed)]
+pub struct LuxDisk {
+    pub header: u8,        // Genom (Typ: Storage, Status: Ready)
+    pub abar_phys: u64,    // To, co wypluł skaner PCI (BAR5)
+    pub port_mask: u32,    // Które gniazda SATA są zajęte?
+    pub capacity_lba: u64, // Ile masz "Siódemek" (512B) do dyspozycji
+}
+
+#[repr(C, packed)]
+pub struct LuxEntity {
+    pub id: u64,           // Twoje 1-7 (Unikalność 64-bit)
+    pub promise: LuxPromise, // Obietnica materializacji (Dysk -> Ocean)
+}
+
+impl LuxPromise {
+    pub fn new(disk_lba: u64, ocean_target: u64, size_sectors: u64) -> Self {
+        LuxPromise {
+            status: 0,
+            disk_lba,
+            ocean_target,
+            size_sectors,
+        }
+    }
+}
+
+impl LuxEntity {
+    // "Lux-Enlighten": Szukamy tylko tego, co niezbędne
+    pub fn enlighten(&self) {
+        // Tu logika, która patrzy na relacje i decyduje:
+        // Czy wczytać 22KB kodu, czy 100MB obrazu?
     }
 }
 
