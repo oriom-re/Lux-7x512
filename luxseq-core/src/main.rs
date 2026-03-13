@@ -8,25 +8,106 @@ use x86_64::structures::idt::{InterruptDescriptorTable, InterruptStackFrame, Pag
 
 const SERIAL_COM1: u16 = 0x3F8;
 const IMPULSE_BASE: u64 = 0x00;
+const LUX_SERIAL_STATUS: u8 = 0x40;
+// początkowo ustawiony na 0
+const BIT_BUSY: u8 = 0b00000000;
+
+// const BIT_BUSY: u8 = 6;
 
 struct SerialWriter;
+
+// fn serial_write_byte(byte: u8) {
+//     unsafe {
+//         let mut status = Port::<u8>::new(SERIAL_COM1 + 5);
+//         while status.read() & 0x20 == 0 {}
+//         Port::<u8>::new(SERIAL_COM1).write(byte);
+//     }
+// }
+
+fn serial_write_byte(byte: u8) {
+    unsafe {
+        let mut status_port = Port::<u8>::new(SERIAL_COM1 + 5);
+        // Czekamy na sprzęt (UART)
+        while status_port.read() & 0x20 == 0 {}
+        // Ślemy bajt
+        Port::<u8>::new(SERIAL_COM1).write(byte);
+        
+        // --- KLUCZ LUX ---
+        // Skoro wysłaliśmy bajt, to "odblokowujemy" nasz Symbol 0x40
+        let status_ptr = LUX_SERIAL_STATUS as *mut u8;
+        *status_ptr &= !(1 << BIT_BUSY); // Gasimy BIT_BUSY!
+    }
+}
+
+// Twoja "Siódemka" dla COM1 (512B bufora)
+// Umieszczamy to pod konkretnym Symbolem, np. 0x40 (SERIAL_STACK)
+static mut SERIAL_BUFFER: [u8; 512] = [0; 512];
+static mut SERIAL_HEAD: usize = 0; // Gdzie dopisujemy
+static mut SERIAL_TAIL: usize = 0; // Gdzie UART odczytuje
 
 impl Write for SerialWriter {
     fn write_str(&mut self, s: &str) -> core::fmt::Result {
         for byte in s.bytes() {
-            serial_write_byte(byte);
+            // serial_write_byte(byte);
+            unsafe {
+                // 1. Wrzucasz bajt na "Własny Stos" (Bufor kołowy)
+                SERIAL_BUFFER[SERIAL_HEAD % 512] = byte;
+                SERIAL_HEAD += 1;
+                
+                // Tu możesz sprawdzić zajętość: 
+                let occupancy = SERIAL_HEAD - SERIAL_TAIL;
+                serial_write_byte(occupancy as u8);
+                // Jeśli occupancy > 400 -> Zmień kolor Glifa na czerwony!
+            }
+            trigger_serial_flush();
         }
+        // 2. Wyzwalasz "Impuls Wykonawczy" (nie czekasz na koniec!)
+        // trigger_serial_flush(); 
         Ok(())
     }
 }
 
-fn serial_write_byte(byte: u8) {
+fn trigger_serial_flush() {
+    // serial_write_byte(0x21);
     unsafe {
-        let mut status = Port::<u8>::new(SERIAL_COM1 + 5);
-        while status.read() & 0x20 == 0 {}
-        Port::<u8>::new(SERIAL_COM1).write(byte);
+        // Czy UART już pracuje? (Sprawdzamy nasz Symbol 0x40 w RAM)
+        if !is_bit_set(LUX_SERIAL_STATUS, BIT_BUSY) {
+            // Jeśli śpi, to go budzimy pierwszym kęsem danych
+            if let Some(byte) = pull_from_serial_stack() {
+                let status_ptr = LUX_SERIAL_STATUS as *mut u8;
+                    // set_bit(&mut *status_ptr, BIT_BUSY); // Symbol: "Pracuję!"
+                outb(SERIAL_COM1, byte); // Pierwszy impuls w krzem
+            }
+        }
     }
 }
+
+fn is_bit_set(value: u8, bit: u8) -> bool {
+    (value & (1 << bit)) != 0
+}
+
+fn set_bit(value: &mut u8, bit: u8) {
+    *value |= 1 << bit;
+}
+
+fn pull_from_serial_stack() -> Option<u8> {
+    unsafe {
+        if SERIAL_HEAD > SERIAL_TAIL {
+            let byte = SERIAL_BUFFER[SERIAL_TAIL % 512];
+            SERIAL_TAIL += 1;
+            Some(byte)
+        } else { None }
+    }
+}
+
+fn outb(port: u16, value: u8) {
+    unsafe {
+        Port::<u8>::new(port).write(value);
+    }
+}
+
+
+
 
 fn serial_log(msg: &str) {
     let _ = writeln!(SerialWriter, "{}", msg);
@@ -61,11 +142,11 @@ impl LuxSymbol {
     }
 }
 
-struct  LuxPromise {
-    status: u8,
-    disk_lba: u64,
-    ocean_target: u64,
-    size_sectors: u64,
+pub struct  LuxPromise {
+    pub status: u8,
+    pub disk_lba: u64,
+    pub ocean_target: u64,
+    pub size_sectors: u64,
 }
 impl LuxPromise {
     // Sprawdza, czy obietnica została już spełniona (Present Bit w statusie)
@@ -76,6 +157,7 @@ impl LuxPromise {
     // "Materializacja": Wczytuje dane z LBA do Oceanu (Target)
     pub fn materialize(&mut self) {
         if !self.is_present() {
+            // TODO dodać wywołanie sterownika dysku i odczyt danych
             // Tu wywołujemy Twój sterownik dysku (np. ATA/PCIe)
             // disk_read(self.disk_lba, self.ocean_target, self.size_sectors);
             
@@ -85,14 +167,6 @@ impl LuxPromise {
             // LOG-LUX: "Obietnica LBA X spełniona pod adresem Y"
         }
     }
-}
-
-#[repr(C, packed)]
-pub struct LuxDisk {
-    pub header: u8,        // Genom (Typ: Storage, Status: Ready)
-    pub abar_phys: u64,    // To, co wypluł skaner PCI (BAR5)
-    pub port_mask: u32,    // Które gniazda SATA są zajęte?
-    pub capacity_lba: u64, // Ile masz "Siódemek" (512B) do dyspozycji
 }
 
 #[repr(C, packed)]
@@ -163,7 +237,7 @@ pub extern "C" fn _start() -> ! {
     let target = symbol.execute(IMPULSE_BASE);
     let _ = write!(
         SerialWriter,
-        "\nPoczątek symbolicznej podróży: 0x{:X}\n\n",
+        "\nPoczatek symbolicznej podrozy: 0x{:X}\n\n",
         target
     );
 
