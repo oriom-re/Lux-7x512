@@ -21,11 +21,9 @@ start:
     mov dx, 0x3f8
     mov al, 'B' 
     out dx, al
- 
-
+    
     call init_serial
     call enable_a20
-    call serial_ok
     
     xor ax, ax           ; reset kontroler dysku
     mov dl, [boot_drive]
@@ -42,19 +40,16 @@ start:
     int 0x13
     jc disk_error
 
-      
-    call serial_ok
-
     lgdt [gdt_descriptor]
     mov eax, cr0
     or eax, 1
     mov cr0, eax
 
-    ; print 'J'
+ 
     mov dx, 0x3f8
-    mov al, 'J'
+    mov al, 'O'
     out dx, al
-
+    
     jmp 0x08:protected_mode_entry
 
 ; jeśli coś się nie uda
@@ -83,28 +78,23 @@ init_serial:
     mov al, 0x03    ; Wyłącz DLAB + ustaw 8N1 (8 bitów, brak parzystości, 1 stop)
     out dx, al
     ; -----------------------
-
-    mov dx, 0x3f8
-    mov al, 'I'     ; Teraz 'I' wyśle się poprawnie jako znak
-    out dx, al
     ret
 
 serial_ok:
     mov dx, 0x3f8
+    mov al, 'P'
+    out dx, al
     mov al, 'O'
     out dx, al
     mov al, 'K'
     out dx, al
     mov al, ' '
     out dx, al
-    mov al, [boot_drive]
-    add al, 65
-    out dx, al
     ret
 
 enable_a20:
     mov dx, 0x3f8
-    mov al, 'A'
+    mov al, 'O'
     out dx, al
     
     mov dx, 0x92
@@ -128,7 +118,10 @@ protected_mode_entry:
     
     or eax, 0x80000000
     mov cr0, eax
-    
+    mov dx, 0x3f8
+    mov al, 'T'
+    out dx, al
+
     jmp 0x18:long_mode_entry
 
 setup_page_tables:
@@ -193,11 +186,18 @@ long_mode_entry:
     
     ; ... (ustawienie segmentów ds, es, ss na 0x20) ...
     mov dx, 0x3f8
-    mov al, 'R' ; Jeśli zobaczysz 'R', to znaczy, że 64-bity DZIAŁAJĄ!
+    mov al, ' '
     out dx, al
+    mov al, 'O'
+    out dx, al
+    mov al, 'K'
+    out dx, al
+
+    
     mov rsp, STACK_ADDR    ; Ustawiamy wierzchołek stosu
     mov rbp, rsp        ; Opcjonalnie: ustawiamy bazę ramki    
     mov rax, 0x8000
+    
     jmp rax ; Skaczemy do naszego 64-bitowego kernela
 
 gdt_start:

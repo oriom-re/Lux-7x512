@@ -94,9 +94,9 @@ extern "x86-interrupt" fn page_fault_handler(
 #[no_mangle]
 pub extern "C" fn _start() -> ! {
     init_idt();
-    serial_log("Lux-7x512: pierwszy impuls");
+    serial_log("\n\nLux-7x512: pierwszy impuls");
 
-    let symbol = LuxSymbol {
+    let symbol: LuxSymbol = LuxSymbol {
         header: 0b1000_0001,
         body: LuxPointer::Relative(8),
     };
@@ -104,7 +104,7 @@ pub extern "C" fn _start() -> ! {
     let target = symbol.execute(IMPULSE_BASE);
     let _ = write!(
         SerialWriter,
-        "Początek symbolicznej podróży: 0x{:X}\n",
+        "\nPoczątek symbolicznej podróży: 0x{:X}\n\n",
         target
     );
 

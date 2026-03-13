@@ -1,9 +1,0 @@
-/target
-
-# Build outputs, images, and archives
-*.bin
-*.raw
-*.raw*
-*.tar.gz
-*.log
-*.swp

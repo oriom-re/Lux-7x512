@@ -16,3 +16,6 @@ luxseq-core/image.tar.gz
 luxseq-core/.cargo/
 luxseq-core/.git/
 
+logs/
+lux_loader/
+.git_2

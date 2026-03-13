@@ -6,7 +6,7 @@ Pierwszy publiczny impuls projektu Lux-7x512. Założenie jest proste: impuls st
 - `luxseq-core/` — rdzeń (kernel/boot) i narzędzia budowania
 
 ## Uruchomienie (skrót)
-Wewnątrz `luxseq-core/` użyj istniejących skryptów `build.sh` i `copy.sh` lub własnego pipeline.
+Wewnątrz `luxseq-core/` użyj istniejących skryptów `build.sh` lub własnego pipeline.
 
 ## Status
 To jest punkt startowy pod publiczny impuls. Struktura repo ma być lekka i czytelna.
