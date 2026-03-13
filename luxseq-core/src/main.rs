@@ -9,33 +9,15 @@ use x86_64::structures::idt::{InterruptDescriptorTable, InterruptStackFrame, Pag
 const SERIAL_COM1: u16 = 0x3F8;
 const IMPULSE_BASE: u64 = 0x00;
 const LUX_SERIAL_STATUS: u8 = 0x40;
-// początkowo ustawiony na 0
-const BIT_BUSY: u8 = 0b00000000;
-
-// const BIT_BUSY: u8 = 6;
+const BIT_BUSY: u8 = 0b000000000;
 
 struct SerialWriter;
 
-// fn serial_write_byte(byte: u8) {
-//     unsafe {
-//         let mut status = Port::<u8>::new(SERIAL_COM1 + 5);
-//         while status.read() & 0x20 == 0 {}
-//         Port::<u8>::new(SERIAL_COM1).write(byte);
-//     }
-// }
-
 fn serial_write_byte(byte: u8) {
     unsafe {
-        let mut status_port = Port::<u8>::new(SERIAL_COM1 + 5);
-        // Czekamy na sprzęt (UART)
-        while status_port.read() & 0x20 == 0 {}
-        // Ślemy bajt
+        let mut status = Port::<u8>::new(SERIAL_COM1 + 5);
+        while status.read() & 0x20 == 0 {}
         Port::<u8>::new(SERIAL_COM1).write(byte);
-        
-        // --- KLUCZ LUX ---
-        // Skoro wysłaliśmy bajt, to "odblokowujemy" nasz Symbol 0x40
-        let status_ptr = LUX_SERIAL_STATUS as *mut u8;
-        *status_ptr &= !(1 << BIT_BUSY); // Gasimy BIT_BUSY!
     }
 }
 
@@ -51,15 +33,15 @@ impl Write for SerialWriter {
             // serial_write_byte(byte);
             unsafe {
                 // 1. Wrzucasz bajt na "Własny Stos" (Bufor kołowy)
+                // SERIAL_BUFFER[SERIAL_HEAD % 512] = byte;
                 SERIAL_BUFFER[SERIAL_HEAD % 512] = byte;
                 SERIAL_HEAD += 1;
                 
                 // Tu możesz sprawdzić zajętość: 
-                let occupancy = SERIAL_HEAD - SERIAL_TAIL;
-                serial_write_byte(occupancy as u8);
+                // let occupancy = SERIAL_HEAD - SERIAL_TAIL;
                 // Jeśli occupancy > 400 -> Zmień kolor Glifa na czerwony!
             }
-            trigger_serial_flush();
+            trigger_serial_flush(byte); 
         }
         // 2. Wyzwalasz "Impuls Wykonawczy" (nie czekasz na koniec!)
         // trigger_serial_flush(); 
@@ -67,18 +49,21 @@ impl Write for SerialWriter {
     }
 }
 
-fn trigger_serial_flush() {
+fn trigger_serial_flush(byte: u8) {
     // serial_write_byte(0x21);
     unsafe {
         // Czy UART już pracuje? (Sprawdzamy nasz Symbol 0x40 w RAM)
         if !is_bit_set(LUX_SERIAL_STATUS, BIT_BUSY) {
             // Jeśli śpi, to go budzimy pierwszym kęsem danych
-            if let Some(byte) = pull_from_serial_stack() {
-                let status_ptr = LUX_SERIAL_STATUS as *mut u8;
-                    // set_bit(&mut *status_ptr, BIT_BUSY); // Symbol: "Pracuję!"
-                outb(SERIAL_COM1, byte); // Pierwszy impuls w krzem
+            pull_from_serial_stack();
+            let status_ptr = LUX_SERIAL_STATUS as *mut u8;
+                set_bit(&mut *status_ptr, BIT_BUSY); // Symbol: "Pracuję!"
+            outb(SERIAL_COM1, byte); // Pierwszy impuls w krzem
             }
-        }
+        
+        
+        // serial_write_byte(LUX_SERIAL_STATUS);
+        // serial_write_byte(BIT_BUSY);
     }
 }
 
@@ -90,13 +75,13 @@ fn set_bit(value: &mut u8, bit: u8) {
     *value |= 1 << bit;
 }
 
-fn pull_from_serial_stack() -> Option<u8> {
+fn pull_from_serial_stack() {
     unsafe {
         if SERIAL_HEAD > SERIAL_TAIL {
-            let byte = SERIAL_BUFFER[SERIAL_TAIL % 512];
-            SERIAL_TAIL += 1;
-            Some(byte)
-        } else { None }
+            // zwalnianie bufora
+            // let byte = SERIAL_BUFFER[(SERIAL_TAIL & 511) as usize];
+            SERIAL_HEAD = 1;
+        } 
     }
 }
 
@@ -237,10 +222,15 @@ pub extern "C" fn _start() -> ! {
     let target = symbol.execute(IMPULSE_BASE);
     let _ = write!(
         SerialWriter,
-        "\nPoczatek symbolicznej podrozy: 0x{:X}\n\n",
+        "\nPoczątek symbolicznej podróży: 0x{:X}\n\n",
         target
     );
-
+    write!(SerialWriter, "działadziałdziaładziaładziaładziaładziaładziaładziaładziaładziaładziaładziaładziaładziaładziaładziaładziaładziaładziaładziaładziaładziaładziaładziaładziaładziaładziaładziaładziaładziaładziaładziaładziaładziaładziaładziaładziaładziaładziaładziaładziaładziaładziaładziaładziaładziaładziaładziaładziaładziaładziaładziaładziaładziaładziaładziaładziaładziaładziaładziaładziaładziaładziaładziaładziaładziaładziaładziaładziaładziaładziaładziaładziaładziaładziaładziaładziaładziaładziaładziaładziaładziaładziaładziaładziaładziaładziaładziaładziaładziaładziaładziaładziaładziaładziaładziaładziaładziaładziaładziaładziaładziaładziaładziaładziaładziaładziaładziaładziaładziaładziaładziaładziaładziaładziaładziaładziaładziaładziaładziaładziaładziaładziaładziaładziaładziaładziaładziaładziaładziaładziaładziaładziaładziaładziaładziaładziaładziaładziaładziaładziaładziaładziaładziaładziaładziaładziaładziaładziaładziaładziaładziaładziaładziaładziaładziaładziaładziaładziaładziaładziaładziaładziaładziaładziaładziaładziaładziaładziaładziaładziaładziaładziaładziaładziaładziaładziaładziaładziaładziaładziaładziaładziaładziaładziaładziaładziaładziaładziaładziaładziaładziaładziaładziaładziaładziaładziaładziaładziaładziaładziaładziaładziaładziaładziaładziaładziaładziaładziaładziaładziaładziaładziaładziaładziaładziaładziaładziaładziaładziaładziaładziaładziaładziaładziaładziaładziaładziaładziaładziaładziaładziaładziaładziaładziaładziaładziaładziaładziaładziaładziaładziaładziaładziaładziaładziaładziaładziaładziaładziaładziaładziaładziaładziaładziaładziaładziaładziaładziaładziaładziaładziaładziaładziaładziaładziaładziaładziaładziaładziaładziaładziaładziaładziaładziaładziaładziaładziaładziaładziaładziaładziaładziaładziaładziaładziaładziaładziaładziaładziaładziaładziaładziaładziaładziaładziaładziaładziaładziaładziaładziaładziaładziaładziaładziaładziaładziaładziaładziaładziaładziaładziaładziaładziaładziaładziaładziaładziaładziaładziaładziaładziaładziaładziaładziaładziaładziaładziaładziaładziaładziaładziaładziaładziaładziaładziaładziaładziaładziaładziaładziałaadziaładziaładziaładziaładziaładziaładziaładziaładziaładziaładziaładziaładziaładziaładziaładziaładziaładziaładziaładziaładziaładziaładziaładziaładziaładziaładziaładziaładziaładziaładziaładziaładziaładziaładziaładziaładziaładziaładziaładziaładziaładziaładziaładziaładziaładziaładziaładziaładziaładziaładziaładziaładziaładziaładziaładziaładziaładziaładziaładziaładziaładziaładziaładziaładziaładziała\n").ok();
+    unsafe {
+        let occupancy = SERIAL_HEAD - SERIAL_TAIL;
+        let _ = write!(SerialWriter, "occupancy {} {} {}", occupancy, SERIAL_HEAD, SERIAL_BUFFER.len());
+    }
+    
     loop {
         unsafe { asm!("hlt"); }
     }
