@@ -6,12 +6,6 @@ __pycache__/
 # Build artifacts
 luxseq-core/target/
 
-# Disk images, archives, build outputs
-*.bin
-luxseq-core/*.raw*
-luxseq-core/*.tar.gz
-luxseq-core/image.tar.gz
-
 # Tooling directories
 luxseq-core/.cargo/
 luxseq-core/.git/
