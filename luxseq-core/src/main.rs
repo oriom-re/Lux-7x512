@@ -10,6 +10,17 @@ const SERIAL_COM1: u16 = 0x3F8;
 const IMPULSE_BASE: u64 = 0x00;
 const LUX_SERIAL_STATUS: u8 = 0x40;
 const BIT_BUSY: u8 = 0b000000000;
+const A0: u8 = 0b00000000;
+const A1: u8 = 0b00000001;
+const A2: u8 = 0b00000010;
+const A3: u8 = 0b00000100;
+const A4: u8 = 0b00001000;
+const A5: u8 = 0b00010000;
+const A6: u8 = 0b00100000;
+const A7: u8 = 0b01000000;
+const A8: u8 = 0b10000000;
+const A9: u8 = 0b10000000;
+
 
 struct SerialWriter;
 
@@ -35,7 +46,12 @@ impl Write for SerialWriter {
                 // 1. Wrzucasz bajt na "Własny Stos" (Bufor kołowy)
                 // SERIAL_BUFFER[SERIAL_HEAD % 512] = byte;
                 SERIAL_BUFFER[SERIAL_HEAD % 512] = byte;
-                SERIAL_HEAD += 1;
+                if SERIAL_BUFFER.len() >= 511 {
+                    SERIAL_HEAD = 0;
+                } else {
+                    SERIAL_HEAD += 1;
+                }
+
                 
                 // Tu możesz sprawdzić zajętość: 
                 // let occupancy = SERIAL_HEAD - SERIAL_TAIL;
@@ -243,3 +259,16 @@ fn panic(info: &PanicInfo) -> ! {
         unsafe { asm!("hlt"); }
     }
 }
+
+symbol.expand()
+
+Stream::materialize()
+0x00: Lux-Genesis
+0x0D: Lux-Equivalence
+0x0C: Lux-Plasticity
+0xEE: Lux-Hash
+0x0A: Lux-Registry
+0x0E: Lux-BadSectorRedirector
+header.set_autonomy(true)
+lux_breathe_from_disk()
+// symbols
