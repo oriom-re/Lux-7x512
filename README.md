@@ -75,7 +75,7 @@ Każda implementacja ziarna musi przestrzegać rygoru 32 bajtów. Poniżej znajd
 ; Total size: 512 bytes (15 grains * 32 bytes)
 
 %macro GRAIN 4
-    dq %1    ; SYMBOL:   Unique Grain ID
+    dq %1    ; SYMBOL:   Unique Grain ID 
     dq %2    ; VECTOR:   Entry Point / RIP Target
     dq %3    ; CONTEXT:  State / Parent Pointer
     dq %4    ; CHECKSUM: Integrity / XOR Hologram
@@ -116,3 +116,5 @@ GRAIN 0x53594D5F52454633, lux_reflection, 0x00000000, 0xBCDAEF0D
 GRAIN 0x53594D5F464F5234, lux_form, 0x00000000, 0xCDEFAB0E
 ; 0x0F: TRANSCENDENCJA (Shift)
 GRAIN 0x53594D5F53484935, lux_shift, 0x00000000, 0xDEBCFA0F
+
+"Old IT: Solving problems caused by its own architecture. Lux: Preventing problems through Geometry."
