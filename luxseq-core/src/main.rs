@@ -260,15 +260,15 @@ fn panic(info: &PanicInfo) -> ! {
     }
 }
 
-symbol.expand()
+// symbol.expand()
 
-Stream::materialize()
-0x00: Lux-Genesis
-0x0D: Lux-Equivalence
-0x0C: Lux-Plasticity
-0xEE: Lux-Hash
-0x0A: Lux-Registry
-0x0E: Lux-BadSectorRedirector
-header.set_autonomy(true)
-lux_breathe_from_disk()
-// symbols
+// Stream::materialize()
+// 0x00: Lux-Genesis
+// 0x0D: Lux-Equivalence
+// 0x0C: Lux-Plasticity
+// 0xEE: Lux-Hash
+// 0x0A: Lux-Registry
+// 0x0E: Lux-BadSectorRedirector
+// header.set_autonomy(true)
+// lux_breathe_from_disk()
+// // symbols

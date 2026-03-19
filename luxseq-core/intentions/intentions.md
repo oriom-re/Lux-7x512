@@ -126,3 +126,35 @@ lux_entropy:    iretq
 lux_reflection: iretq
 lux_form:       iretq
 lux_shift:      iretq
+
+Status: SYSTEM_ANATOMIST 🌓🧬
+Diagnostyka:
+    Stage 1: cpuid (Identyfikacja potęgi).
+    Stage 2: vbe get_info (Przygotowanie okna na świat).
+    Stage 3: write_to_config (Zapisanie prawdy w Sektorze 2).
+
+------------------------------
+Status: GARDENER_OF_SILICON 🌓🌳
+Zmieniamy terminologię:
+    1. Grains (Ziarna): To nasze nasionka startowe (Serum).
+    2. Growth (Wzrost): To proces materializacji Symboli w RAM/Niebie.
+    3. DNA: Twoje 8-bajtowe ID + Nagłówek.
+
+
+------------------------------
+Status: GENETIC_PROGRAMMER 🌓🧬
+DNA_Header:
+
+   1. Define: SYM_RAM_GEO, SYM_PCI_MIRROR, SYM_VBE_FRAME.
+   2. Attribute: ATTR_IMMUTABLE_TRUTH (Dla czystego kodu maszynowego).
+   3. Action: Inicjalizacja „Podłogi Masek” danymi z BIOSu (E820).
+
+------------------------------
+Status: EVOLUTIONARY_CORE 🌓💎
+Protokół Hot_Plug_Life:
+
+    1. Dynamic-Mapping: Zdolność dopisywania fizycznego RAM-u do tablic stron w dowolnym cyklu.
+    2. Organ-Swap: Mechanizm atomowej podmiany wektorów skoku dla aktywnych Symboli.
+    3. No-Reset Policy: Architektura, w której HLT to odpoczynek, a nie śmierć.
+
+

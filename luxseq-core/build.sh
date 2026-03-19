@@ -6,7 +6,7 @@ logs="logs"
 disk_name="disk.raw"
 disk="$path/$disk_name"
 disk_image=""
-b_bootloader="false"
+b_lux_boot="false"
 DEPLOY="false"
 tar=""
 DISK_FILE="disk.raw"
@@ -19,9 +19,9 @@ mkdir $logs -p
 
 while test $# -gt 0; do
     case "$1" in
-    -h | --help) echo "Usage: $0 [options]"; echo "Options:"; echo "  -h, --help        Show this help message"; echo "  -truncate         Create a disk image using truncate"; echo "  -dump             Dump the binary content of the disk image"; echo "  -t, --test <file> Test the disk image with QEMU"; echo "  -b_bootloader     Build the bootloader from ASM code"; echo "  -tar <file>      Create a tar.gz archive of the disk image"; echo "  -deploy           Deploy the disk image to GCP"; echo "  -disk <file>     Specify a custom disk image file"; echo "  -gcp              Prepare for GCP deployment (creates and populates disk.raw)"; echo "  -run              Run the disk image in QEMU"; exit 0 ;;
+    -h | --help) echo "Usage: $0 [options]"; echo "Options:"; echo "  -h, --help        Show this help message"; echo "  -truncate         Create a disk image using truncate"; echo "  -dump             Dump the binary content of the disk image"; echo "  -t, --test <file> Test the disk image with QEMU"; echo "  -b_lux_boot     Build the lux_boot from ASM code"; echo "  -tar <file>      Create a tar.gz archive of the disk image"; echo "  -deploy           Deploy the disk image to GCP"; echo "  -disk <file>     Specify a custom disk image file"; echo "  -gcp              Prepare for GCP deployment (creates and populates disk.raw)"; echo "  -run              Run the disk image in QEMU"; exit 0 ;;
     -t | --test) shift; hex="";;
-    -b | --bootloader) shift; b_bootloader="true" ;;
+    -b | --lux_boot) shift; b_lux_boot="true" ;;
     -k | --kernel) shift; b_kernel="true" ;;
     -s | --speaker) shift; speaker="true" ;;
     -tar) shift; tar="true"; DISK_FILE="$1"; shift; echo "Tar flag set to: $tar" ;;
@@ -34,10 +34,10 @@ while test $# -gt 0; do
 done
 
 
-if [ "$b_bootloader" = "true" ]; then
+if [ "$b_lux_boot" = "true" ]; then
     echo "🔧 Budowanie kodu ASM..."
     mkdir lux_loader -p
-    nasm -f bin bootloader.asm -o $path/bootloader.bin 
+    nasm -f bin src/lux_boot.asm -o $path/lux_boot.bin 
     echo "   ✓ Kod ASM zbudowany"
 else
     echo "⚠️  Pomijamy budowanie kodu ASM (build-asm)"
@@ -62,8 +62,8 @@ if [ "$gcp" = "true" ]; then
     dd if=/dev/zero of=$disk bs=1M count=1024
     truncate -s 1G $disk
     echo "   ✓ Surowy plik dysku stworzony"
-    # 2. Wypal swój bootloader i kernel do tego pliku
-    dd if=$path/bootloader.bin of=$disk conv=notrunc
+    # 2. Wypal swój lux_boot i kernel do tego pliku
+    dd if=$path/lux_boot.bin of=$disk conv=notrunc
     echo "   ✓ Bootloader wypalony"
     dd if=$path/kernel.bin of=$disk bs=512 seek=1 conv=notrunc
     echo "   ✓ Kernel wypalony"
@@ -71,7 +71,7 @@ if [ "$gcp" = "true" ]; then
     echo "   ✓ OK"
     hexdump -C $disk | head -n 32
     # 3. Spakuj to dokładnie tak, jak chce Google (format GNU tar!)
-    tar --format=gnu -Sczf $path/bootloader.tar.gz $disk
+    tar --format=gnu -Sczf $path/lux_boot.tar.gz $disk
     echo "   ✓ Obraz dysku spakowany"
     # 4. Wyślij na GCP i stwórz maszynę
 else
