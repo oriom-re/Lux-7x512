@@ -14,6 +14,7 @@ start:
     nop
 
 main:
+    mov [boot_drive], dl ; Zapisz dysk startowy
     cli
     xor ax, ax
     mov ds, ax
@@ -28,39 +29,26 @@ main:
     call print_serial_char
 
     ; 1. Załaduj GRAIN TABLE (Sektor 1 z dysku -> 0x7E00 w RAM)
-    mov ah, 0x02        ; Funkcja: Odczyt sektorów
-    mov al, 0x01        ; Ilość: 1 sektor (512 bajtów - cała tabela)
-    mov ch, 0x00        ; Cylinder 0
-    mov cl, 0x02        ; Sektor 2 (To jest fizycznie Sektor 1 LBA)
-    mov dh, 0x00        ; Głowica 0
-    mov bx, 0x7E00      ; Adres docelowy: Tuż za bootloaderem
-    int 0x13
-    jc disk_error
+    mov eax, 1          ; LBA = 1
+    mov cx, 1           ; Ilość sektorów = 1
+    xor ax, ax
+    mov es, ax          ; ES:BX = 0x0000:0x7E00
+    mov bx, 0x7E00
+    call read_lba
 
     mov al, 'T'         ; 'T' = Table Loaded
     call print_serial_char
     mov si, msg_grain_loaded
     call print_string
 
-    ; 2. Odczytaj CONFIG (Grain 0x00)
-    ; Tabela jest pod 0x7E00. Config to pierwsze ziarno.
+    ; 2. Odczytaj i załaduj CONFIG (Grain 0x00)
     mov bx, 0x7E00      ; Wskaźnik na początek tabeli
     mov eax, [bx + 16]  ; LBA Start Configu
     mov cx, [bx + 28]   ; Rozmiar Configu (w sektorach)
-
-    ; Konwersja LBA -> CHS (Uproszczona: LBA+1 dla małych wartości)
-    inc ax              ; BIOS Sector start
-
-    push ax             ; Zapisz numer sektora (LBA+1) na stosie
-
-    ; 3. Załaduj CONFIG do 0x8000
-    mov ah, 0x02        ; Read
-    mov al, cl          ; Ilość sektorów
-    pop cx              ; Odzyskaj numer sektora do CL (CH=0 dla małych wartości)
-    mov dh, 0x00
-    mov bx, 0x8000      ; Adres docelowy Configu
-    int 0x13
-    jc disk_error
+    xor ax, ax
+    mov es, ax          ; ES:BX = 0x0000:0x8000
+    mov bx, 0x8000
+    call read_lba
 
     mov al, 'C'         ; 'C' = Config Loaded
     call print_serial_char
@@ -72,6 +60,39 @@ main:
     jmp 0x0000:0x8000
 
 ; --- PROCEDURY POMOCNICZE (Port z bootloader.asm) ---
+read_lba:
+    ; Wejście: EAX = LBA, CX = ilość sektorów, ES:BX = adres docelowy
+    pusha
+    mov byte [retry_count], 3 ; Ustaw licznik prób
+
+.retry_loop:
+    ; Przygotuj Disk Address Packet (DAP) w bezpiecznym miejscu (np. 0x7000)
+    mov di, 0x7000
+    mov byte [di], 0x10     ; Rozmiar pakietu (16 bajtów)
+    mov byte [di+1], 0      ; Zarezerwowane
+    mov [di+2], cx          ; Ilość sektorów
+    mov [di+4], bx          ; Offset docelowy
+    mov [di+6], es          ; Segment docelowy
+    mov [di+8], eax         ; LBA (dolne 32 bity)
+    mov dword [di+12], 0    ; LBA (górne 32 bity, na razie 0)
+
+    mov ah, 0x42            ; Funkcja INT 13h: Extended Read
+    mov dl, [boot_drive]    ; Dysk startowy
+    mov si, di              ; DS:SI wskazuje na DAP
+    int 0x13
+    jnc .success            ; Jeśli Carry Flag=0, odczyt udany
+
+    ; Błąd - resetujemy kontroler i próbujemy ponownie
+    xor ax, ax              ; Funkcja AH=00h: Reset Disk System
+    mov dl, [boot_drive]
+    int 0x13
+    dec byte [retry_count]
+    jnz .retry_loop
+    jmp disk_error          ; Wszystkie próby zawiodły
+.success:
+    popa
+    ret
+
 init_serial:
     push dx
     push ax
@@ -120,6 +141,9 @@ msg_grain_loaded:  db "Lux: Table OK.", 13, 10, 0
 msg_config_loaded: db "Lux: Config OK. Passing torch...", 13, 10, 0
 msg_error:        db "Lux: Disk Error!", 0
 
+boot_drive: db 0
+retry_count: db 0
+
 ; Wyrównanie do 510 bajtów i sygnatura
 times 510 - ($ - $$) db 0
 dw 0xAA55
@@ -167,21 +191,14 @@ config_entry:
     mov eax, [bx + 32 + 16] ; LBA Kernela (Grain 1 offset 16)
     mov cx, [bx + 32 + 28]  ; Size Kernela
     
-    inc ax              ; LBA -> Sector number
-    
-    push ax             ; Zapisz numer sektora startowego
-
+    ; Ustawiamy segment:offset docelowy -> 0x2000:0x0000 (0x20000)
     push es
     mov bx, 0x2000
     mov es, bx
-    xor bx, bx          ; ES:BX = 0x2000:0000 -> 0x20000 fizycznie
-    
-    mov ah, 0x02
-    mov al, cl          ; Ilość sektorów
-    pop cx              ; Odzyskaj numer sektora do CL
-    mov dh, 0x00
-    int 0x13
+    xor bx, bx
+    call read_lba
     pop es
+
     ; (Brak obsługi błędów dla czytelności - zakładamy, że dysk działa)
     
     mov dx, SERIAL_PORT
@@ -206,25 +223,32 @@ config_entry:
 
     ; 4. Budowanie Tabel Stronicowania (PML4)
     ; Używamy adresu 0x1000 dla tablic stronicowania
-    ; Mapowanie tożsamościowe (Identity Map) pierwszych 2MB
+    ; Grain 0x02 (Promise): Mapujemy całe dolne 4 GiB dla Kernela.
+    ; Zakres tablic: 0x1000 - 0x7000 (24 KB)
     
-    ; Czyścimy pamięć dla tablic (0x1000 - 0x4000)
+    ; Czyścimy pamięć dla tablic
     mov di, 0x1000
     xor ax, ax
-    mov cx, 4096
+    mov cx, 6144        ; 24 KB / 4 bajty = 6144 dwords
+    rep stosd
 
     ; PML4 (0x1000) -> PDP (0x2000)
-    mov dword [0x1000], 0x2003  ; Adres 0x2000 + Present + Writable
+    ; 0x03 = Present | RW | Supervisor (US=0) -> Tylko Kernel ma tu wstęp
+    mov dword [0x1000], 0x2003
 
-    ; PDP (0x2000) -> PD (0x3000)
-    mov dword [0x2000], 0x3003  ; Adres 0x3000 + Present + Writable
+    ; PDP (0x2000) -> 4 x PD (0x3000, 0x4000, 0x5000, 0x6000)
+    ; Każdy wpis PDP pokrywa 1 GiB. Ustawiamy 4 wpisy = 4 GiB.
+    mov dword [0x2000], 0x3003
+    mov dword [0x2008], 0x4003
+    mov dword [0x2010], 0x5003
+    mov dword [0x2018], 0x6003
 
-    ; PD (0x3000) -> Mapujemy 2MB Huge Page
+    ; PD (0x3000..0x6FFF) -> Mapujemy 4 GiB na Huge Pages (2MB)
     ; 0x00000000 | Present | Writable | Huge Page (bit 7)
-    ; FIX: Mapujemy cały 1 GiB (512 wpisów), żeby Stos (32MB) i PCI były dostępne
+    ; Flaga 0x83 = P(1) | RW(1) | US(0) | Huge(1)
     mov eax, 0x83           ; Start: 0x00000000 + flagi
     mov di, 0x3000          ; Adres PD
-    mov cx, 512             ; 512 wpisów po 2MB = 1 GiB
+    mov cx, 2048            ; 4 * 512 wpisów = 2048 stron po 2MB = 4 GiB
 .map_pd:
     mov [di], eax           ; Zapisz wpis (Low 32 bit)
     mov dword [di + 4], 0   ; High 32 bit (0)
