@@ -57,6 +57,7 @@ main:
     call print_serial_char
     mov si, msg_config_loaded
     call print_string
+    rep movsb
 
     ; 4. Skok do Configu (Sektor 2)
     ; Config przejmuje sterowanie, ładuje kernela i wchodzi w Long Mode.
@@ -213,6 +214,7 @@ config_entry:
 
     ; 2. Mapa Pamięci E820 (Pobieramy zanim wejdziemy w Protected Mode)
     call get_memory_map
+<<<<<<< HEAD
     
     mov dx, SERIAL_PORT
     mov al, 'M'         ; 'M' = Map E820 Done
@@ -220,6 +222,8 @@ config_entry:
 
     ; 2a. Wykrywanie CPU (CPUID) - Grain 0x01 Logic
     call detect_cpu
+=======
+>>>>>>> 4ebb20e (start)
 
 
     ; 3. A20 Gate (Szybka metoda)
@@ -235,8 +239,12 @@ config_entry:
     ; Czyścimy pamięć dla tablic
     mov di, 0x1000
     xor ax, ax
+<<<<<<< HEAD
     mov cx, 6144        ; 24 KB / 4 bajty = 6144 dwords
     rep stosd
+=======
+    mov cx, 4096
+>>>>>>> 4ebb20e (start)
 
     ; PML4 (0x1000) -> PDP (0x2000)
     ; 0x03 = Present | RW | Supervisor (US=0) -> Tylko Kernel ma tu wstęp
@@ -418,3 +426,7 @@ gdt_descriptor:
     dd gdt_start
 
 ; Wyrównanie Sektora 2 do 512 bajtów
+<<<<<<< HEAD
+=======
+
+>>>>>>> 4ebb20e (start)
