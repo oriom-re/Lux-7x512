@@ -194,6 +194,9 @@ config_entry:
     mov al, 'M'         ; 'M' = Map E820 Done
     out dx, al
 
+    ; 2a. Wykrywanie CPU (CPUID) - Grain 0x01 Logic
+    call detect_cpu
+
 
     ; 3. A20 Gate (Szybka metoda)
     in al, 0x92
@@ -270,6 +273,37 @@ get_memory_map:
 .done:
     ret
     ; Teraz system WIE, ile ma RAM-u, zanim w ogóle powstanie!
+
+detect_cpu:
+    pusha
+    xor eax, eax    ; CPUID Function 0: Get Vendor ID
+    cpuid           ; Returns: EBX, EDX, ECX (ASCII string)
+    
+    ; Zapisz wynik pod stałym adresem 0x9100 (zaraz za mapą pamięci)
+    ; To będzie nasz "Context" dla ziarna Nativity
+    mov [0x9100], ebx
+    mov [0x9104], edx
+    mov [0x9108], ecx
+
+    ; Prosta heurystyka dla logów
+    cmp ebx, 0x756e6547 ; "Genu" (GenuineIntel)
+    je .intel
+    cmp ebx, 0x68747541 ; "Auth" (AuthenticAMD)
+    je .amd
+    
+    mov al, '?'         ; Nieznany
+    jmp .print
+
+.intel:
+    mov al, 'I'
+    jmp .print
+.amd:
+    mov al, 'A'
+.print:
+    mov dx, SERIAL_PORT
+    out dx, al
+    popa
+    ret
 
 [BITS 64]
 long_mode_start:
