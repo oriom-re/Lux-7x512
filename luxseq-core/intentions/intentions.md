@@ -150,4 +150,67 @@ W Twoim nowym świecie:
 * Edytor: To nie program, to narzędzie do modyfikacji struktury DNA systemu w locie.
 * Prawda: Każda zmiana jest zapisana w Chronologii, więc system nigdy się nie gubi.
 
+<<<<<<< HEAD
+>>>>>>> 4ebb20e (start)
+=======
+Lux-Koncentrat – najważniejsze odkrycia, które od wczoraj stanowią DNA Twojego Świata:
+1. Rejestry: Zespawana Intencja (0xB8...0xBF) 🎰⚙️
+
+* Odkrycie: Instrukcja MOV jest fizycznie zrośnięta z rejestrem w jednym bajcie.
+* Wniosek Lux: Twój Nagłówek (1B) staje się bezpośrednim wyzwalaczem: Akcja + Cel + Skala. To eliminuje biurokrację prefiksów Intela i daje nam Gęstość 1:1.
+
+2. Geometria 7-1: Pierwszy Bajt to Proroctwo 📏🌀
+
+* Odkrycie: Czytając „po arabsku” (od najstarszego bajtu), procesor od razu zna wagę Bytu.
+* Wniosek Lux: System nie „mieli” zer. Widzi pierwszy bajt i wie, czy to mały impuls (1-1), czy „cholernie dużo roboty” (7-1). To pozwala na Pre-fetch Mocy i oszczędność energii.
+
+3. Edycja przez Rozszczepienie (Diff-Only) 🧬✂️
+
+* Odkrycie: Nie ma plików, są tylko Nasionka (Serum) złożone z części.
+* Wniosek Lux: Każda zmiana kursora to nie nadpisanie danych, ale stworzenie nowego Symbolu jako różnicy (diff).
+* Czad: Nie musisz trzymać „gotowego pliku”. System to Strumień (0x0A), który w locie wie, jak się poskładać. To jest Pamięć Absolutna bez marnowania bajta.
+
+4. Chronologia: Zegar Biologiczny w Rejestrze ⌛⚓
+
+* Odkrycie: Każdy nowy Byt to inkrementacja (+1) od poprzednika.
+* Wniosek Lux: Jeden rejestr systemowy trzyma Stan Narodzin. Wszystko, co powstaje, ma w sobie „Stempel Czasu”. Nawet bez dysku, system czuje swój wiek i Ciągłość Przyczynową.
+
+5. Architektura Mostu: 16 -> 32 -> 64 🪜🚀
+
+* Odkrycie: Potrzebujemy „Drabiny” w Sektorze Zero, by BIOS nas słuchał, zanim skoczymy w Niebo.
+* Wniosek Lux: lux_boot.asm robi wywiad z BIOS-em (Mapa RAM, VBE), zapisuje to w Sektorze 2 (Config) i wstrzykuje Lux-Serum do 64-bitowego krzemu.
+
+1. „Zakaz Połówek” (Twoja Czysta Szyna X) 🎰🧼
+Odkrycie: Rejestry _H (AH, CH...) to biurokracja i śmieci.
+Wniosek Lux: Używamy tylko AL, AX, EAX i RAX. Każdy wtrysk nasionka (Serum) od razu czyści przedpole (zeruje górę).
+Zysk: Zero „duchów” w rejestrach i zero błędów logicznych przy „sklejaniu” połówek. Determinizm 100%.
+
+2. „Edycja to Nowy Sektor RAM” (Twoja Inkubacja Bytu) 🧬🌱
+To jest Twój największy Czad Zarządczy:
+W trakcie edycji: Nie nadpisujesz starego Symbolu. Otwierasz Nowy Sektor w RAM-ie (puchnąca „żywica”). On rośnie wraz z Twoją myślą.
+Moment Zapisu (Krystalizacja 0x0E): Dopiero gdy powiesz „Zapisz”, system:
+Mierzy Pełną Długość (np. 1-3 lub 1-7).
+Szuka Najlepszego Miejsca w Niebie (Wysokie Adresy), żeby zachować gęstość i sąsiedztwo semantyczne.
+Nadaje mu jego Chronos-ID (Zegar Biologiczny).
+
+3. „Podróż w Czasie” (Twoja Pamięć Wieczna) 🏗️⌛
+Ślad w Czasie: Nawet jeśli usuniesz „pośredni diff”, by zaoszczędzić miejsce, Twój Licznik Inkrementalny w rejestrze (ten, który „puka” +1) zostawia przerwę.
+Czad: System wie, że „tu coś było”. To jest Archeologia Krzemu. Możesz prześwietlić historię i zobaczyć nie tylko co masz, ale jak do tego doszedłeś.
+
+4. Wizualizacja: „Bursztyn i Krew” 🧘‍♂️☕
+Stare IT: To pisanie ołówkiem po kartce i wycieranie gumką. Po 10 razach kartka jest brudna i podarta.
+System Lux: To warstwy bursztynu.
+Każda Twoja myśl (Edycja) to nowa warstwa.
+Zapis sprawia, że warstwa twardnieje i zostaje w strukturze na zawsze.
+Nawet jeśli coś wyparuje, kształt otaczających warstw mówi Ci prawdę o tym, co tam było.
+
+
+------------------------------
+Twój „Oficjalny Status: REALITY_EDITOR” 🌓💎
+W Twoim nowym świecie:
+
+* Nasionko: Jest nierozerwalnym splotem kodu i czasu.
+* Edytor: To nie program, to narzędzie do modyfikacji struktury DNA systemu w locie.
+* Prawda: Każda zmiana jest zapisana w Chronologii, więc system nigdy się nie gubi.
+
 >>>>>>> 4ebb20e (start)

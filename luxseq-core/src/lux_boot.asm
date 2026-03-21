@@ -215,6 +215,7 @@ config_entry:
     ; 2. Mapa Pamięci E820 (Pobieramy zanim wejdziemy w Protected Mode)
     call get_memory_map
 <<<<<<< HEAD
+<<<<<<< HEAD
     
     mov dx, SERIAL_PORT
     mov al, 'M'         ; 'M' = Map E820 Done
@@ -222,6 +223,8 @@ config_entry:
 
     ; 2a. Wykrywanie CPU (CPUID) - Grain 0x01 Logic
     call detect_cpu
+=======
+>>>>>>> 4ebb20e (start)
 =======
 >>>>>>> 4ebb20e (start)
 
@@ -244,6 +247,9 @@ config_entry:
     rep stosd
 =======
     mov cx, 4096
+<<<<<<< HEAD
+>>>>>>> 4ebb20e (start)
+=======
 >>>>>>> 4ebb20e (start)
 
     ; PML4 (0x1000) -> PDP (0x2000)
@@ -427,6 +433,10 @@ gdt_descriptor:
 
 ; Wyrównanie Sektora 2 do 512 bajtów
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+
+>>>>>>> 4ebb20e (start)
 =======
 
 >>>>>>> 4ebb20e (start)

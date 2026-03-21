@@ -65,13 +65,12 @@ if [ "$gcp" = "true" ]; then
     # 2. Wypal swój lux_boot i kernel do tego pliku
     dd if=$path/lux_boot.bin of=$disk bs=512 conv=notrunc
     echo "   ✓ Bootloader wypalony"
-<<<<<<< HEAD
     # Kernel wyłączony na życzenie architekta (Lux Logic Phase)
     # dd if=$path/kernel.bin of=$disk bs=512 seek=3 conv=notrunc
-=======
     # dd if=$path/kernel.bin of=$disk bs=512 seek=1 conv=notrunc
     # echo "   ✓ Kernel wypalony"
->>>>>>> 4ebb20e (start)
+    # dd if=$path/kernel.bin of=$disk bs=512 seek=1 conv=notrunc
+    # echo "   ✓ Kernel wypalony"
     sync
     echo "   ✓ OK"
     hexdump -C $disk | head -n 32
