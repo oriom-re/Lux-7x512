@@ -53,19 +53,19 @@ main:
 
     mov si, msg_config_loaded
     call print_string
+    rep movsb
 
     ; 4. Skok do Configu (Sektor 2)
     ; Config przejmuje sterowanie, ładuje kernela i wchodzi w Long Mode.
     jmp 0x0000:0x8000
 
 print_string:
-print_loop:
     lodsb
     test al, al
     jz .done
     mov ah, 0x0E
     int 0x10
-    jmp print_loop
+    jmp print_string
 .done:
     ret
 
@@ -82,6 +82,9 @@ msg_error:        db "Lux: Disk Error!", 0
 ; Wyrównanie do 510 bajtów i sygnatura
 times 510 - ($ - $$) db 0
 dw 0xAA55
+
+
+
 
 ; =========================================================
 ; SEKTOR 1 - GRAIN TABLE (0x7E00 w pamięci)
@@ -136,7 +139,7 @@ config_entry:
     ; (Brak obsługi błędów dla czytelności - zakładamy, że dysk działa)
 
     ; 2. Mapa Pamięci E820 (Pobieramy zanim wejdziemy w Protected Mode)
-    get_memory_map
+    call get_memory_map
 
 
     ; 3. A20 Gate (Szybka metoda)
@@ -152,7 +155,6 @@ config_entry:
     mov di, 0x1000
     xor ax, ax
     mov cx, 4096
-    rep stosw
 
     ; PML4 (0x1000) -> PDP (0x2000)
     mov dword [0x1000], 0x2003  ; Adres 0x2000 + Present + Writable
@@ -205,6 +207,7 @@ get_memory_map:
     test ebx, ebx       ; Jeśli ebx=0, to koniec mapy
     jnz .loop
 .done:
+    ret
     ; Teraz system WIE, ile ma RAM-u, zanim w ogóle powstanie!
 
 [BITS 64]
@@ -236,4 +239,4 @@ gdt_descriptor:
     dd gdt_start
 
 ; Wyrównanie Sektora 2 do 512 bajtów
-times 512 - ($ - config_entry) db 0
+

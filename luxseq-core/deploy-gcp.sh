@@ -12,12 +12,12 @@ echo ""
 
 
 echo "📝 K3: Sprawdzenie obrazu..."
-ls -lh "$DISK_FILE"
-tar -Sczf "$DISK_FILE.tar.gz" "$DISK_FILE"
+ls -lh "lux_loader/$DISK_FILE"
+tar -Sczf "lux_loader/$DISK_FILE.tar.gz" -C lux_loader "$DISK_FILE"
 echo "   ✓ OK"
 
 echo "📝 K4: Upload GCP..."
-gsutil -m cp "$DISK_FILE.tar.gz" "gs://nowy2/"
+gsutil -m cp "lux_loader/$DISK_FILE.tar.gz" "gs://nowy2/"
 echo "   ✓ OK"
 
 echo "📝 K5: Image..."
@@ -39,5 +39,3 @@ echo "   ✓ OK"
 
 echo ""
 echo "🎉 Done!"
-
-

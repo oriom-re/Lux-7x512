@@ -63,15 +63,16 @@ if [ "$gcp" = "true" ]; then
     truncate -s 1G $disk
     echo "   ✓ Surowy plik dysku stworzony"
     # 2. Wypal swój lux_boot i kernel do tego pliku
-    dd if=$path/lux_boot.bin of=$disk conv=notrunc
+    dd if=$path/lux_boot.bin of=$disk bs=512 conv=notrunc
     echo "   ✓ Bootloader wypalony"
-    dd if=$path/kernel.bin of=$disk bs=512 seek=1 conv=notrunc
-    echo "   ✓ Kernel wypalony"
+    # dd if=$path/kernel.bin of=$disk bs=512 seek=1 conv=notrunc
+    # echo "   ✓ Kernel wypalony"
     sync
     echo "   ✓ OK"
     hexdump -C $disk | head -n 32
     # 3. Spakuj to dokładnie tak, jak chce Google (format GNU tar!)
-    tar --format=gnu -Sczf $path/lux_boot.tar.gz $disk
+    tar --format=gnu -Sczf $path/lux_boot.tar.gz $disk_name
+    ls -lh $disk
     echo "   ✓ Obraz dysku spakowany"
     # 4. Wyślij na GCP i stwórz maszynę
 else
@@ -86,6 +87,7 @@ if [ "$DEPLOY" = "true" ]; then
     echo ""
     ./deploy-gcp.sh "$DISK_FILE"
 fi
+
 
 # uruchom się na QEMU
 if [ "$RUN_QEMU" = "true" ]; then
