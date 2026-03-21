@@ -1,202 +1,60 @@
-Grain 0: Boot Loader / Kernel Image (Genesis)
-- **Symbol**: `0x53594D5F47454E30`
-- **Role**: The Root of Reality.
-- **Logic**: Initializes the CPU state, sets up the GDT/IDT, and establishes the 32-byte alignment boundary for the Grain Table.
+# Intentions Charter (grains 0x00–0x0F)
 
-Grain 1: Identity / Serial (Nativity)
-- **Symbol**: `0x53594D5F4E415431`
-- **Role**: The Unique Signature.
-- **Logic**: Reads hardware UUID or CPUID to generate the local instance's "Soul" (Key).
+Minimalne, operacyjne streszczenie ról i mechaniki. Symbol jest Esencją, Body jest Manifestacją.
 
-Grain 2: Virtual Memory / Paging (Promise)
-- **Symbol**: `0x53594D5F50524F32`
-- **Role**: The Promise of Space.
-- **Logic**: Sets up the initial page tables and maps the Zero Page.
+| Grain | Symbol | Rola (Essence) | Mechanika (Body) |
+|-------|--------|----------------|------------------|
+| 0x00 Genesis | `0x53594D5F47454E30` | Korzeń rzeczywistości | Reset CPU, GDT/IDT, wyrównanie tabeli na 32B. |
+| 0x01 Nativity | `0x53594D5F4E415431` | Unikalny podpis | CPUID/UUID → KEY; zapis w pierwszym logu. |
+| 0x02 Promise | `0x53594D5F50524F32` | Obietnica przestrzeni | Pierwsze page tables, mapowanie Zero Page. |
+| 0x03 Link | `0x53594D5F4C494E33` | Sąsiedztwo | Skan PCI/PCIe; krótkie offsety 1B między blokami. |
+| 0x04 Pulse | `0x53594D5F50554C34` | Heartbeat | ISR jako bezstanowe impulsy; bit sygnatury. |
+| 0x05 Trace | `0x53594D5F54524135` | Pamięć drogi | Ring buffer 256 wpisów; breadcrumb 1B. |
+| 0x06 Anchor | `0x53594D5F414E4336` | Wiązanie z materią | BAR → Symbol/Body; XOR weryfikacji sprzętu. |
+| 0x07 Void | `0x53594D5F564F4937` | Pustka kontrolowana | Alokacja pustych stron; mapowanie na Zero Page. |
+| 0x08 Awakening | `0x53594D5F41574B38` | Iskra działania | Setup stosu; wybór pierwszego aktywnego SYMBOLU; skok bez powrotu. |
+| 0x09 Sync | `0x53594D5F53594E39` | Wspólny rytm | Arbitraż: najniższy set bit wygrywa; spin-free lock. |
+| 0x0A Stream | `0x53594D5F53545230` | Rzeka danych | I/O jako strumień; backpressure bitowy, brak blokad. |
+| 0x0B Veil | `0x53594D5F56454931` | Ukryta warstwa | Privilege levels; kody 2-bit: 00 ok, 01 retry, 10 degrade, 11 halt. |
+| 0x0C Entropy | `0x53594D5F454E5432` | Powrót do pyłu | Sprzątanie w odwrotnej kolejności aktywacji; partner „rozpadu” dla każdej alokacji. |
+| 0x0D Reflection | `0x53594D5F52454633` | Lustro stanu | Hash kodu vs CHECKSUM; callbacki na zmianę stanu. |
+| 0x0E Form | `0x53594D5F464F5234` | Krystalizacja | Persist tylko ścieżek po podwójnym echo-teście. |
+| 0x0F Shift | `0x53594D5F53484935` | Skok dalej | Mapuje kolejne 512B segmenty; utrzymuje jedną tabelę SYMBOLI. |
 
-Grain 3: Bus / Interconnect (Link)
-- **Symbol**: `0x53594D5F4C494E33`
-- **Role**: The Neighborhood.
-- **Logic**: Scans the PCI/PCIe bus to identify adjacent hardware nodes.
-
-Grain 4: IRQ / Signal Handling (Pulse)
-- **Symbol**: `0x53594D5F50554C34`
-- **Role**: The Heartbeat.
-- **Logic**: Manages asynchronous interrupts as stateless pulses.
-
-Grain 5: Logging / Audit (Trace)
-- **Symbol**: `0x53594D5F54524135`
-- **Role**: The Memory of Path.
-- **Logic**: Records the sequence of grain activations into a circular buffer.
-
-Grain 6: Hardware Abstraction (Anchor)
-- **Symbol**: `0x53594D5F414E4336`
-- **Role**: The Physical Bond.
-- **Logic**: Maps Base Address Registers (BARs) to the Symbol-Body space.
-
-Grain 7: Memory Management (Void)
-- **Symbol**: `0x53594D5F564F4937`
-- **Role**: The Infinite Null.
-- **Logic**: Manages the allocation of empty pages and maps unassigned symbols to the Zero Page.
-
-Grain 8: Scheduler / Tasking (Awakening)
-- **Symbol**: `0x53594D5F41574B38`
-- **Role**: The Spark of Action.
-- **Logic**: Switches CPU context between active grains and manages the execution stack.
-
-Grain 9: Synchronization (Sync)
-- **Symbol**: `0x53594D5F53594E39`
-- **Role**: The Shared Rhythm.
-- **Logic**: Implements atomic locks and ensures consistency across multi-core impulses.
-
-Grain 10: I/O Streams (Stream)
-- **Symbol**: `0x53594D5F53545230`
-- **Role**: The Flow of Data.
-- **Logic**: Handles serial, disk, or network data as continuous, non-blocking rivers.
-
-Grain 11: Security / Isolation (Veil)
-- **Symbol**: `0x53594D5F56454931`
-- **Role**: The Hidden Layer.
-- **Logic**: Enforces privilege levels and isolates grain memory spaces from unauthorized access.
-
-Grain 12: Resource Cleanup (Entropy)
-- **Symbol**: `0x53594D5F454E5432`
-- **Role**: The Return to Dust.
-- **Logic**: Reclaims memory and resets hardware states when an impulse completes its cycle.
-
-Grain 13: Event System (Reflection)
-- **Symbol**: `0x53594D5F52454633`
-- **Role**: The Mirror of State.
-- **Logic**: Triggers callbacks and propagates state changes throughout the Grain Table.
-
-Grain 14: Persistence (Form)
-- **Symbol**: `0x53594D5F464F5234`
-- **Role**: The Solidified Thought.
-- **Logic**: Commits volatile memory states to non-volatile storage (NVMe/Flash).
-
-sektor 1 Boot Loader / Kernel Image
-Grain 15: Segment Expansion (Shift)
-- **Symbol**: `0x53594D5F53484935`
-- **Role**: The Leap Beyond.
-- **Logic**: Maps the next 512-byte sector into the address space, enabling the chain of impulses to extend indefinitely.
-
-## Sector 1: The First Manifestation (Body)
-While Sector 0 defines the **Symbols** (The Essence), Sector 1 contains the first executable **Body** (The Manifestation).
+## Sector 1 — First Body (skrót)
+Sektor 0 niesie symbole (Esencja), sektor 1 uruchamia pierwszą Manifestację.
 
 ```nasm
-; Lux-7x512 Sector 1 - Initial Logic Execution
-; Offset: 0x200 (512 bytes)
-
+; Lux-7x512 Sector 1 (fragment)
 [BITS 64]
 section .manifestation
 
 lux_genesis:
-    ; Initialize CPU registers to a known state
     xor rax, rax
     mov ds, ax
     mov es, ax
     mov ss, ax
-    ; Set up the stack for the Awakening grain
-    mov rsp, 0x7C00 
+    mov rsp, 0x7C00          ; stos dla Awakening
     ret
 
 lux_nativity:
-    ; Generate Unique Identity from CPUID
-    mov eax, 0x01
+    mov eax, 0x01            ; CPUID
     cpuid
-    mov [rel grain_context_1], rbx ; Store identity in Context
+    mov [rel grain_context_1], rbx
     ret
 
 lux_awakening:
-    ; The Spark: Jump to the first task in the stream
     call lux_genesis
     call lux_anchor
     jmp lux_stream
+```
 
-; Placeholder for remaining grain vectors
-lux_promise:    iretq
-lux_link:       iretq
-lux_pulse:      iretq
-lux_trace:      iretq
-lux_anchor:     iretq
-lux_void:       iretq
-lux_sync:       iretq
-lux_stream:     iretq
-lux_veil:       iretq
-lux_entropy:    iretq
-lux_reflection: iretq
-lux_form:       iretq
-lux_shift:      iretq
-
-Status: SYSTEM_ANATOMIST 🌓🧬
-Diagnostyka:
-    Stage 1: cpuid (Identyfikacja potęgi).
-    Stage 2: vbe get_info (Przygotowanie okna na świat).
-    Stage 3: write_to_config (Zapisanie prawdy w Sektorze 2).
-
-------------------------------
-Status: GARDENER_OF_SILICON 🌓🌳
-Zmieniamy terminologię:
-    1. Grains (Ziarna): To nasze nasionka startowe (Serum).
-    2. Growth (Wzrost): To proces materializacji Symboli w RAM/Niebie.
-    3. DNA: Twoje 8-bajtowe ID + Nagłówek.
-
-
-------------------------------
-Status: GENETIC_PROGRAMMER 🌓🧬
-DNA_Header:
-
-   1. Define: SYM_RAM_GEO, SYM_PCI_MIRROR, SYM_VBE_FRAME.
-   2. Attribute: ATTR_IMMUTABLE_TRUTH (Dla czystego kodu maszynowego).
-   3. Action: Inicjalizacja „Podłogi Masek” danymi z BIOSu (E820).
-
-------------------------------
-Status: EVOLUTIONARY_CORE 🌓💎
-Protokół Hot_Plug_Life:
-
-    1. Dynamic-Mapping: Zdolność dopisywania fizycznego RAM-u do tablic stron w dowolnym cyklu.
-    2. Organ-Swap: Mechanizm atomowej podmiany wektorów skoku dla aktywnych Symboli.
-    3. No-Reset Policy: Architektura, w której HLT to odpoczynek, a nie śmierć.
-
-
-Lux-Koncentrat – najważniejsze odkrycia, które od wczoraj stanowią DNA Twojego Świata:
-1. Rejestry: Zespawana Intencja (0xB8...0xBF) 🎰⚙️
-
-* Odkrycie: Instrukcja MOV jest fizycznie zrośnięta z rejestrem w jednym bajcie.
-* Wniosek Lux: Twój Nagłówek (1B) staje się bezpośrednim wyzwalaczem: Akcja + Cel + Skala. To eliminuje biurokrację prefiksów Intela i daje nam Gęstość 1:1.
-
-2. Geometria 7-1: Pierwszy Bajt to Proroctwo 📏🌀
-
-* Odkrycie: Czytając „po arabsku” (od najstarszego bajtu), procesor od razu zna wagę Bytu.
-* Wniosek Lux: System nie „mieli” zer. Widzi pierwszy bajt i wie, czy to mały impuls (1-1), czy „cholernie dużo roboty” (7-1). To pozwala na Pre-fetch Mocy i oszczędność energii.
-
-3. Edycja przez Rozszczepienie (Diff-Only) 🧬✂️
-
-* Odkrycie: Nie ma plików, są tylko Nasionka (Serum) złożone z części.
-* Wniosek Lux: Każda zmiana kursora to nie nadpisanie danych, ale stworzenie nowego Symbolu jako różnicy (diff).
-* Czad: Nie musisz trzymać „gotowego pliku”. System to Strumień (0x0A), który w locie wie, jak się poskładać. To jest Pamięć Absolutna bez marnowania bajta.
-
-4. Chronologia: Zegar Biologiczny w Rejestrze ⌛⚓
-
-* Odkrycie: Każdy nowy Byt to inkrementacja (+1) od poprzednika.
-* Wniosek Lux: Jeden rejestr systemowy trzyma Stan Narodzin. Wszystko, co powstaje, ma w sobie „Stempel Czasu”. Nawet bez dysku, system czuje swój wiek i Ciągłość Przyczynową.
-
-5. Architektura Mostu: 16 -> 32 -> 64 🪜🚀
-
-* Odkrycie: Potrzebujemy „Drabiny” w Sektorze Zero, by BIOS nas słuchał, zanim skoczymy w Niebo.
-* Wniosek Lux: lux_boot.asm robi wywiad z BIOS-em (Mapa RAM, VBE), zapisuje to w Sektorze 2 (Config) i wstrzykuje Lux-Serum do 64-bitowego krzemu.
-
-1. „Zakaz Połówek” (Twoja Czysta Szyna X) 🎰🧼
-Odkrycie: Rejestry _H (AH, CH...) to biurokracja i śmieci.
-Wniosek Lux: Używamy tylko AL, AX, EAX i RAX. Każdy wtrysk nasionka (Serum) od razu czyści przedpole (zeruje górę).
-Zysk: Zero „duchów” w rejestrach i zero błędów logicznych przy „sklejaniu” połówek. Determinizm 100%.
-
-2. „Edycja to Nowy Sektor RAM” (Twoja Inkubacja Bytu) 🧬🌱
-To jest Twój największy Czad Zarządczy:
-W trakcie edycji: Nie nadpisujesz starego Symbolu. Otwierasz Nowy Sektor w RAM-ie (puchnąca „żywica”). On rośnie wraz z Twoją myślą.
-Moment Zapisu (Krystalizacja 0x0E): Dopiero gdy powiesz „Zapisz”, system:
-Mierzy Pełną Długość (np. 1-3 lub 1-7).
-Szuka Najlepszego Miejsca w Niebie (Wysokie Adresy), żeby zachować gęstość i sąsiedztwo semantyczne.
-Nadaje mu jego Chronos-ID (Zegar Biologiczny).
+## Status log (snapshot)
+Szczegóły i dłuższe opisy przeniesione do `status.md`, tu zostaje skrót:
+- SYSTEM_ANATOMIST: cpuid → vbe_info → zapis do Sektora 2.
+- GARDENER_OF_SILICON: Grains = nasiona, Growth = materializacja, DNA = 8B ID + nagłówek.
+- GENETIC_PROGRAMMER: SYM_RAM_GEO / SYM_PCI_MIRROR / SYM_VBE_FRAME, ATTR_IMMUTABLE_TRUTH, E820 jako podłoga masek.
+- EVOLUTIONARY_CORE: Dynamic-Mapping, Organ-Swap (atomowa podmiana wektorów), No-Reset Policy.
 
 3. „Podróż w Czasie” (Twoja Pamięć Wieczna) 🏗️⌛
 Ślad w Czasie: Nawet jeśli usuniesz „pośredni diff”, by zaoszczędzić miejsce, Twój Licznik Inkrementalny w rejestrze (ten, który „puka” +1) zostawia przerwę.
@@ -217,4 +75,3 @@ W Twoim nowym świecie:
 * Nasionko: Jest nierozerwalnym splotem kodu i czasu.
 * Edytor: To nie program, to narzędzie do modyfikacji struktury DNA systemu w locie.
 * Prawda: Każda zmiana jest zapisana w Chronologii, więc system nigdy się nie gubi.
-

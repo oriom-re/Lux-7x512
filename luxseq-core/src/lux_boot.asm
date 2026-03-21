@@ -6,6 +6,9 @@ org 0x7C00
 ; Rola: Załadować Grain Table (Sektor 1) i Config (Sektor 2).
 ; ---------------------------------------------------------
 
+%define STACK_ADDR 0x2000000  ; 32 MiB - solidny stos dla Long Mode (z bootloader.asm)
+%define SERIAL_PORT 0x3f8
+
 start:
     jmp short main
     nop
@@ -19,6 +22,11 @@ main:
     mov sp, 0x7C00
     sti
 
+    ; --- TESTY / DEBUG (Inspiracja bootloader.asm) ---
+    call init_serial    ; Włączamy UART (COM1)
+    mov al, 'B'         ; 'B' = Boot Start
+    call print_serial_char
+
     ; 1. Załaduj GRAIN TABLE (Sektor 1 z dysku -> 0x7E00 w RAM)
     mov ah, 0x02        ; Funkcja: Odczyt sektorów
     mov al, 0x01        ; Ilość: 1 sektor (512 bajtów - cała tabela)
@@ -29,6 +37,8 @@ main:
     int 0x13
     jc disk_error
 
+    mov al, 'T'         ; 'T' = Table Loaded
+    call print_serial_char
     mov si, msg_grain_loaded
     call print_string
 
@@ -51,6 +61,8 @@ main:
     int 0x13
     jc disk_error
 
+    mov al, 'C'         ; 'C' = Config Loaded
+    call print_serial_char
     mov si, msg_config_loaded
     call print_string
     rep movsb
@@ -58,6 +70,33 @@ main:
     ; 4. Skok do Configu (Sektor 2)
     ; Config przejmuje sterowanie, ładuje kernela i wchodzi w Long Mode.
     jmp 0x0000:0x8000
+
+; --- PROCEDURY POMOCNICZE (Port z bootloader.asm) ---
+init_serial:
+    push dx
+    push ax
+    mov dx, 0x3fb
+    mov al, 0x80    ; DLAB on
+    out dx, al
+    mov dx, SERIAL_PORT
+    mov al, 0x03    ; 38400 baud
+    out dx, al
+    mov dx, 0x3f9
+    xor al, al
+    out dx, al
+    mov dx, 0x3fb
+    mov al, 0x03    ; 8N1
+    out dx, al
+    pop ax
+    pop dx
+    ret
+
+print_serial_char:
+    push dx
+    mov dx, SERIAL_PORT
+    out dx, al
+    pop dx
+    ret
 
 print_string:
     lodsb
@@ -70,6 +109,8 @@ print_string:
     ret
 
 disk_error:
+    mov al, 'E'
+    call print_serial_char
     mov si, msg_error
     call print_string
     cli
@@ -116,6 +157,10 @@ times 512 - ($ - $$ - 512) db 0
 config_entry:
     ; Jesteśmy w 16-bit Real Mode pod adresem 0x8000
     
+    ; Reset segmentów dla pewności
+    xor ax, ax
+    mov ds, ax
+
     ; 1. Załaduj KERNEL (Grain 0x01)
     ; Kernel ładujemy do 0x20000 (128KB), żeby nie nadpisać BIOSu ani Configu
     mov bx, 0x7E00
@@ -137,9 +182,17 @@ config_entry:
     int 0x13
     pop es
     ; (Brak obsługi błędów dla czytelności - zakładamy, że dysk działa)
+    
+    mov dx, SERIAL_PORT
+    mov al, 'K'         ; 'K' = Kernel Loaded
+    out dx, al
 
     ; 2. Mapa Pamięci E820 (Pobieramy zanim wejdziemy w Protected Mode)
     call get_memory_map
+    
+    mov dx, SERIAL_PORT
+    mov al, 'M'         ; 'M' = Map E820 Done
+    out dx, al
 
 
     ; 3. A20 Gate (Szybka metoda)
@@ -166,6 +219,10 @@ config_entry:
     ; 0x00000000 | Present | Writable | Huge Page (bit 7)
     mov dword [0x3000], 0x00000083
 
+    mov dx, SERIAL_PORT
+    mov al, 'P'         ; 'P' = Paging Setup
+    out dx, al
+
     ; 5. Przygotowanie do Long Mode
     ; Ładujemy GDT (Global Descriptor Table)
     cli 
@@ -190,6 +247,10 @@ config_entry:
     or eax, 1 << 31     ; Bit 31 = PG (Paging)
     or eax, 1 << 0      ; Bit 0  = PE (Protected Mode)
     mov cr0, eax
+
+    mov dx, SERIAL_PORT
+    mov al, 'J'         ; 'J' = Jump to Long Mode
+    out dx, al
 
     ; 6. TRANSCENDENCJA -> Skok do 64-bitowego kodu
     jmp 0x08:long_mode_start
@@ -220,6 +281,14 @@ long_mode_start:
     mov gs, ax
     mov ss, ax
 
+    ; Inspiracja z bootloader.asm: Ustawienie stosu w Long Mode
+    mov rsp, STACK_ADDR 
+    mov rbp, rsp
+    
+    mov dx, SERIAL_PORT
+    mov al, '!'         ; '!' = We are inside 64-bit!
+    out dx, al
+
     ; Skok do Kernela załadowanego pod 0x20000
     mov rax, 0x20000
     jmp rax
@@ -239,4 +308,3 @@ gdt_descriptor:
     dd gdt_start
 
 ; Wyrównanie Sektora 2 do 512 bajtów
-
