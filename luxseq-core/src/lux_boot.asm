@@ -51,11 +51,12 @@ main:
     ; Konwersja LBA -> CHS (Uproszczona: LBA+1 dla małych wartości)
     inc ax              ; BIOS Sector start
 
+    push ax             ; Zapisz numer sektora (LBA+1) na stosie
+
     ; 3. Załaduj CONFIG do 0x8000
     mov ah, 0x02        ; Read
     mov al, cl          ; Ilość sektorów
-    mov ch, 0x00
-    mov cl, al          ; Sektor startowy
+    pop cx              ; Odzyskaj numer sektora do CL (CH=0 dla małych wartości)
     mov dh, 0x00
     mov bx, 0x8000      ; Adres docelowy Configu
     int 0x13
@@ -65,7 +66,6 @@ main:
     call print_serial_char
     mov si, msg_config_loaded
     call print_string
-    rep movsb
 
     ; 4. Skok do Configu (Sektor 2)
     ; Config przejmuje sterowanie, ładuje kernela i wchodzi w Long Mode.
@@ -169,6 +169,8 @@ config_entry:
     
     inc ax              ; LBA -> Sector number
     
+    push ax             ; Zapisz numer sektora startowego
+
     push es
     mov bx, 0x2000
     mov es, bx
@@ -176,8 +178,7 @@ config_entry:
     
     mov ah, 0x02
     mov al, cl          ; Ilość sektorów
-    mov ch, 0x00
-    mov cl, al          ; Sektor startowy
+    pop cx              ; Odzyskaj numer sektora do CL
     mov dh, 0x00
     int 0x13
     pop es
@@ -220,7 +221,16 @@ config_entry:
 
     ; PD (0x3000) -> Mapujemy 2MB Huge Page
     ; 0x00000000 | Present | Writable | Huge Page (bit 7)
-    mov dword [0x3000], 0x00000083
+    ; FIX: Mapujemy cały 1 GiB (512 wpisów), żeby Stos (32MB) i PCI były dostępne
+    mov eax, 0x83           ; Start: 0x00000000 + flagi
+    mov di, 0x3000          ; Adres PD
+    mov cx, 512             ; 512 wpisów po 2MB = 1 GiB
+.map_pd:
+    mov [di], eax           ; Zapisz wpis (Low 32 bit)
+    mov dword [di + 4], 0   ; High 32 bit (0)
+    add eax, 0x200000       ; +2MB fizycznie
+    add di, 8               ; Następny wpis w tabeli
+    loop .map_pd
 
     mov dx, SERIAL_PORT
     mov al, 'P'         ; 'P' = Paging Setup
@@ -323,9 +333,45 @@ long_mode_start:
     mov al, '!'         ; '!' = We are inside 64-bit!
     out dx, al
 
-    ; Skok do Kernela załadowanego pod 0x20000
-    mov rax, 0x20000
-    jmp rax
+    ; --- SCAN PCI (Grain 0x06 Logic) ---
+    ; Zanim skoczymy do (brakującego) kernela, poszukajmy sprzętu.
+    call pci_scan_bus0
+
+    ; Kernel not ready - enter Meditation State
+    mov dx, SERIAL_PORT
+    mov al, '.'
+    out dx, al
+.hang:
+    hlt
+    jmp .hang
+
+pci_scan_bus0:
+    ; Skanuje Bus 0, Device 0-31, Func 0
+    ; Port 0xCF8 (Addr), 0xCFC (Data)
+    xor rbx, rbx        ; Device counter (0-31)
+.next_dev:
+    mov eax, 0x80000000 ; Enable Bit
+    mov edx, ebx
+    shl edx, 11         ; Device << 11
+    or eax, edx         ; Bus 0 implies bits 16-23 are 0
+    
+    mov dx, 0xCF8
+    out dx, eax
+    mov dx, 0xCFC
+    in eax, dx
+
+    cmp ax, 0xFFFF      ; Vendor ID = 0xFFFF means empty
+    je .skip
+    
+    ; Urządzenie znalezione!
+    mov dx, SERIAL_PORT
+    mov al, '+'
+    out dx, al
+.skip:
+    inc rbx
+    cmp rbx, 32
+    jl .next_dev
+    ret
 
 ; --- GDT DATA ---
 align 4
