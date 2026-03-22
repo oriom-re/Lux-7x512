@@ -41,10 +41,13 @@ main:
     mov si, msg_grain_loaded
     call print_string
 
-    ; 2. Odczytaj i załaduj CONFIG (Grain 0x00)
-    mov bx, 0x7E00      ; Wskaźnik na początek tabeli
-    mov eax, [bx + 16]  ; LBA Start Configu
-    mov cx, [bx + 28]   ; Rozmiar Configu (w sektorach)
+    ; 2. Odczytaj i załaduj CONFIG (Grain 0x00 - Genesis)
+    ; Struktura 16B: [0..5] LBA, [6..7] Off, [8..13] Size, [14..15] Flags
+    mov bx, 0x7E00      ; Grain 0x00 start
+    mov eax, [bx]       ; LBA (Low 32 bit) - wystarczy na start
+    mov ecx, [bx + 8]   ; Size (Low 32 bit) w bajtach
+    add ecx, 511        ; Round up
+    shr ecx, 9          ; Bytes -> Sectors
     xor ax, ax
     mov es, ax          ; ES:BX = 0x0000:0x8000
     mov bx, 0x8000
@@ -155,20 +158,20 @@ dw 0xAA55
 ; SEKTOR 1 - GRAIN TABLE (0x7E00 w pamięci)
 ; =========================================================
 ; Tutaj zaczyna się fizycznie drugi sektor w pliku binarnym.
+; Nowa geometria "Density First": 16 bajtów na ziarno.
+; Format: [LBA 6B] [OFFSET 2B] [SIZE 6B] [FLAGS/END 2B]
 
 ; --- GRAIN 0x00: CONFIG / PRE-BOOT ---
-db "SYM_CONF"         ; 8 bajtów Symbol
-dq 0x0000000000000001 ; UUID
-dq 0x0000000000000002 ; OFFSET 16: LBA Start (Sektor 2 - bo 0=MBR, 1=Table)
-dd 0x00000001         ; OFFSET 24: Flags (Bootable)
-dd 0x00000001         ; OFFSET 28: Size (1 sektor)
+dw 0x0002, 0x0000, 0x0000  ; LBA = 2 (6 bytes: low, mid, high)
+dw 0x0000                  ; Offset = 0
+dw 0x0200, 0x0000, 0x0000  ; Size = 512 bytes (6 bytes)
+dw 0x0001                  ; Flags (Active)
 
 ; --- GRAIN 0x01: KERNEL (Rust) ---
-db "SYM_KERN"         ; 8 bajtów Symbol
-dq 0x0000000000000002 ; UUID
-dq 0x0000000000000003 ; OFFSET 16: LBA Start (Sektor 3 - bo 0=MBR, 1=Table, 2=Genesis)
-dd 0x00000000         ; OFFSET 24: Flags
-dd 0x00000010         ; OFFSET 28: Size (16 sektorów kernela)
+dw 0x0003, 0x0000, 0x0000  ; LBA = 3 (Sector 3)
+dw 0x0000                  ; Offset = 0
+dw 0x2000, 0x0000, 0x0000  ; Size = 8192 bytes (16 sectors * 512)
+dw 0x0000                  ; Flags (Locked/Reserved by Chronology?)
 
 ; ... reszta ziaren (dopełnienie) ...
 times 512 - ($ - $$ - 512) db 0
@@ -187,9 +190,12 @@ config_entry:
 
     ; 1. Załaduj KERNEL (Grain 0x01)
     ; Kernel ładujemy do 0x20000 (128KB), żeby nie nadpisać BIOSu ani Configu
-    mov bx, 0x7E00
-    mov eax, [bx + 32 + 16] ; LBA Kernela (Grain 1 offset 16)
-    mov cx, [bx + 32 + 28]  ; Size Kernela
+    ; Grain 0x01 jest pod offsetem +16 (bo 16-byte record)
+    mov bx, 0x7E10
+    mov eax, [bx]       ; LBA
+    mov ecx, [bx + 8]   ; Size (bytes)
+    add ecx, 511
+    shr ecx, 9          ; Bytes -> Sectors
     
     ; Ustawiamy segment:offset docelowy -> 0x2000:0x0000 (0x20000)
     push es

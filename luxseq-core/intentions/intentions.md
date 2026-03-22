@@ -1,5 +1,18 @@
 # Intentions Charter (grains 0x00–0x0F)
 
+## Konstytucja Bytu: Density First & Chronology
+**DENSITY_FIRST:** Jednostką prawdy jest **16-bajtowy rekord** (Matematyczna Perła). 
+W sektorze 512B mieści się dokładnie **32 Symbole**.
+
+| Offset (B) | Rozmiar | Nazwa   | Opis |
+|------------|---------|---------|------|
+| 0x00       | 6B      | LBA     | Adres absolutny na nośniku. |
+| 0x06       | 2B      | OFFSET  | Przesunięcie wewnątrz bloku. |
+| 0x08       | 6B      | SIZE    | Rozmiar w bajtach (Bajtowa Precyzja). |
+| 0x0E       | 2B      | FLAGS   | Chronology Lock / Checksum fragment. |
+
+**CHRONOLOGY:** Tylko `0x00` (Genesis) jest w pełni aktywne na start. Reszta to "Zamrożona Przeszłość", uwalniana w rytmie Chronos.
+
 Minimalne, operacyjne streszczenie ról i mechaniki. Symbol jest Esencją, Body jest Manifestacją.
 
 | Grain | Symbol | Rola (Essence) | Mechanika (Body) |
@@ -29,7 +42,7 @@ Sektor 0 niesie symbole (Esencja), sektor 1 uruchamia pierwszą Manifestację.
 [BITS 64]
 section .manifestation
 
-lux_genesis:
+lux_genesis:            ; 0x00 - The only active seed at boot
     xor rax, rax
     mov ds, ax
     mov es, ax
