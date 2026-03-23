@@ -132,7 +132,7 @@ setup_page_tables:
     ; --- PDPT[0] (0-1 GiB) ---
     mov eax, 0x83
     mov [PDPT_ADDR], eax
-    mov dword [PDPT_ADDR + 4], 0
+    mov dword [PDPT_ADDR + 4], 0 ; 
     
     ; --- PDPT[1] (1-2 GiB) ---
     mov eax, 0x83  ; 1 GiB fizycznie
