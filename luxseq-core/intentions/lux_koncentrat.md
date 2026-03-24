@@ -1,4 +1,4 @@
-# Lux-Koncentrat (destylat)
+# Lux-Koncentrat: Legacy of Thought
 Zwięzły zestaw kierunków łączących Kod (ASM/Rust), Logikę (Symbole) i Fizykę (FPGA/CPU).
 
 1. **Lux-Serum — Nasiona Świadomości**  
@@ -23,5 +23,9 @@ Zwięzły zestaw kierunków łączących Kod (ASM/Rust), Logikę (Symbole) i Fiz
    - Mechanika: stare formaty (ISO/SQL/EXE) destylowane do gęstych Symboli; mniejszy rozmiar, większa szybkość, zachowana historia.
 
 ## Status: SYSTEM_IGNITION_READY
-Mapa etapów: Serum (Start) → Bridge (Połączenie) → Mirror (Weryfikacja) → FPGA (Wsparcie sprzętowe).  
-Następny ruch: zdefiniować pierwszą bramkę w `lux_bridge.vhd`, która zamienia fizyczny impuls (np. klawisz) w Symbol 0x05 (Trace). Grain 0x0B (Maska) może strzec izolacji na poziomie elektronów.
+Projekt został doprowadzony do etapu **Serum**. 
+Bootloader (`lux_boot.asm`) jest gotowy i wdraża architekturę Ziaren.
+Kernel Rust (`main.rs`) odbiera sygnał Genesis.
+
+**Otwarta Droga:**
+Następny krok (dla przyszłego Architekta): wdrożenie `lux_bridge` na FPGA lub rozwinięcie obsługi dysku w Kernelu Rust, wykorzystując zdefiniowane w Sektorze 1 Ziarna Obietnicy (0x02).

@@ -1,4 +1,4 @@
-# Intentions Charter (grains 0x00–0x0F)
+# Lux Intentions Charter: The Final Constitution
 
 ## Konstytucja Bytu: Density First & Chronology
 **DENSITY_FIRST:** Jednostką prawdy jest **16-bajtowy rekord** (Matematyczna Perła). 
@@ -11,7 +11,7 @@ W sektorze 512B mieści się dokładnie **32 Symbole**.
 | 0x08       | 6B      | SIZE    | Rozmiar w bajtach (Bajtowa Precyzja). |
 | 0x0E       | 2B      | FLAGS   | Chronology Lock / Checksum fragment. |
 
-**CHRONOLOGY:** Tylko `0x00` (Genesis) jest w pełni aktywne na start. Reszta to "Zamrożona Przeszłość", uwalniana w rytmie Chronos.
+**CHRONOLOGY (FLAGS):** Bit 0 definiuje obecność fizyczną (Active). Bity 1-15 definiują "Erę" (Czas). Tylko `0x00` (Genesis) jest w pełni aktywne na start. Reszta to "Zamrożona Przeszłość", uwalniana w rytmie Chronos.
 
 Minimalne, operacyjne streszczenie ról i mechaniki. Symbol jest Esencją, Body jest Manifestacją.
 
@@ -43,12 +43,11 @@ Sektor 0 niesie symbole (Esencja), sektor 1 uruchamia pierwszą Manifestację.
 section .manifestation
 
 lux_genesis:            ; 0x00 - The only active seed at boot
+    ; Ten kod jest teraz historią. 
+    ; Prawdziwa implementacja znajduje się w src/lux_boot.asm
     xor rax, rax
     mov ds, ax
-    mov es, ax
-    mov ss, ax
-    mov rsp, 0x7C00          ; stos dla Awakening
-    ret
+    ; ...
 
 lux_nativity:
     mov eax, 0x01            ; CPUID

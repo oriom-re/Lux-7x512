@@ -9,6 +9,13 @@ org 0x7C00
 %define STACK_ADDR 0x2000000  ; 32 MiB - solidny stos dla Long Mode (z bootloader.asm)
 %define SERIAL_PORT 0x3f8
 
+; --- LUX CHRONOLOGY FLAGS (16-bit) ---
+; Bit 0:    ACTIVE (1 = Exists, 0 = Void)
+; Bit 1-15: ERA REQUIREMENT (0 = Genesis, 1 = Nativity, ...)
+%define FLG_GENESIS   0x0001  ; Era 0, Active
+%define FLG_LOCKED    0x0000  ; Era 0, Inactive (Void)
+%define FLG_FUTURE    0x0002  ; Era 1 (Active but requires Era 1)
+
 start:
     jmp short main
     nop
@@ -166,13 +173,19 @@ dw 0xAA55
 dw 0x0002, 0x0000, 0x0000  ; LBA = 2 (6 bytes: low, mid, high)
 dw 0x0000                  ; Offset = 0
 dw 0x0200, 0x0000, 0x0000  ; Size = 512 bytes (6 bytes)
-dw 0x0001                  ; Flags (Active)
+dw FLG_GENESIS             ; Flags: Present, Era 0
 
-; --- GRAIN 0x01: KERNEL (Rust) ---
-dw 0x0003, 0x0000, 0x0000  ; LBA = 3 (Sector 3)
+; --- GRAIN 0x01: KERNEL (Active Era 0 - Boot requirement) ---
+dw 0x0003, 0x0000, 0x0000  ; LBA = 3
 dw 0x0000                  ; Offset = 0
-dw 0x2000, 0x0000, 0x0000  ; Size = 8192 bytes (16 sectors * 512)
-dw 0x0000                  ; Flags (Locked/Reserved by Chronology?)
+dw 0x2000, 0x0000, 0x0000  ; Size = 8192 bytes
+dw FLG_GENESIS             ; Flags: Present, Era 0
+
+; --- GRAIN 0x02: PROMISE (Locked / Future Idea) ---
+dw 0x0013, 0x0000, 0x0000  ; LBA = 19 (Placeholder)
+dw 0x0000
+dw 0x1000, 0x0000, 0x0000
+dw FLG_FUTURE              ; Flags: Present, but requires Era 1
 
 ; ... reszta ziaren (dopełnienie) ...
 times 512 - ($ - $$ - 512) db 0
@@ -368,13 +381,18 @@ long_mode_start:
     ; Zanim skoczymy do (brakującego) kernela, poszukajmy sprzętu.
     call pci_scan_bus0
 
-    ; Kernel not ready - enter Meditation State
-    mov dx, SERIAL_PORT
-    mov al, '.'
-    out dx, al
-.hang:
-    hlt
-    jmp .hang
+    ; --- GENESIS HANDOFF (Grain 0x08 Logic) ---
+    ; Przekazujemy "Metadane w Rejestrach" do Kernela (0x00 Genesis Version)
+    ; RDI = DNA (Grain Table)
+    ; RSI = CONTEXT (E820 + CPUID)
+    ; RDX = MATTER (PCI Device List)
+    
+    mov rdi, 0x7E00     ; ARG1: Grain Table Address
+    mov rsi, 0x9000     ; ARG2: System Context
+    mov rdx, 0x9200     ; ARG3: Found Hardware Cache
+    
+    mov rax, 0x20000    ; Adres wejścia Kernela (Grain 0x01 body)
+    jmp rax             ; Skok w nieznane. Powodzenia.
 
 pci_scan_bus0:
     ; Skanuje Bus 0, Device 0-31, Func 0
