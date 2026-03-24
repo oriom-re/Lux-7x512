@@ -5,6 +5,7 @@ __pycache__/
 
 # Build artifacts
 luxseq-core/target/
+*.raw
 
 # Tooling directories
 luxseq-core/.cargo/
@@ -13,3 +14,5 @@ luxseq-core/.git/
 logs/
 lux_loader/
 .git_2
+
+messages/

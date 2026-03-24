@@ -132,10 +132,10 @@ setup_page_tables:
     ; --- PDPT[0] (0-1 GiB) ---
     mov eax, 0x83
     mov [PDPT_ADDR], eax
-    mov dword [PDPT_ADDR + 4], 0
+    mov dword [PDPT_ADDR + 4], 0 ; 
     
     ; --- PDPT[1] (1-2 GiB) ---
-    mov eax, 0x83  ; 1 GiB fizycznie
+    mov eax, 0x40000000 | 0x83  ; 1 GiB fizycznie
     mov [PDPT_ADDR + 8], eax    ; Następny slot (8 bajtów dalej)
     mov dword [PDPT_ADDR + 12], 0
 
@@ -150,12 +150,9 @@ setup_page_tables:
     mov dword [PDPT_ADDR + 28], 0
 
     ; --- PDPT[4..511] są puste, więc nie musimy ich ustawiać, bo domyślnie będą 0 (nieobecne)
-    mov eax, 0x100000000 | 0x83  ; 4 GiB fizycznie, ale to i tak nie będzie używane, bo to jest poza 32-bitowym adresem
-    mov [PDPT_ADDR + 32], eax
-    mov dword [PDPT_ADDR + 36], 0
 
     xor eax, eax
-    mov [PD_ADDR], eax
+    mov [PD_ADDR], eax ; PD[0] = 0x00000000
     mov dword [PD_ADDR + 4], 0
 
     mov eax, PML4_ADDR
@@ -243,5 +240,5 @@ gdt_descriptor:
 
 boot_drive: db 0
 
-times 510 - ($ - $$) db 0
+times 510 - ($ - $$) db 0 ; Wyrównanie do 510 bajtów i sygnatura
 dw 0xaa55
